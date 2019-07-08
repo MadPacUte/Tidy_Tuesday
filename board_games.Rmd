@@ -1,0 +1,248 @@
+---
+title: "Board Games"
+author: "Randall Madsen"
+date: "March 12, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##This was my first attempt at a [tidytuesday](https://github.com/rfordatascience/tidytuesday) blog post. I wanted to first load some of my most used packages. As well as set the theme and read in the data. I usually look at the summary function to see the distribution of numerical columns. 
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(plotly)
+
+theme_set(theme_classic())
+
+board_games <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-12/board_games.csv")
+
+summary(board_games)
+```
+
+##After doing a little exploritory data analysis (EDA), I had to make a function that used a modulo to place the year into a decade category. There might be a better way of getting this value, but it appeared to work well for my purpose. 
+```{r}
+floor_decade = function(value){ return(value - value %% 10) }
+
+board_games <- board_games %>% 
+  mutate(decade = floor_decade(year_published))
+```
+
+##I was curious about how certain board games have trended over time. Some of the graphs shown below are growing over time. The most suprising of all of the graphs to me is the dice graph. It looks like it has exploded over the last decade or so. 
+```{r}
+
+board_games %>% 
+  group_by(year_published, category) %>% 
+  arrange(desc(year_published)) %>% 
+  filter(str_detect(category, "Sport")) %>% 
+  count(category) %>%
+  ggplot(aes(year_published, n)) +
+  geom_col() +
+  labs(x = "Year game was published",
+       y = "Count of games",
+       title = "The number of board games that contain Sport as the category over time")
+
+
+
+board_games %>% 
+  group_by(year_published, category) %>% 
+  arrange(desc(year_published)) %>% 
+  filter(str_detect(category, "War")) %>% 
+  count(category) %>%
+  ggplot(aes(year_published, n)) +
+  geom_col() +
+  labs(x = "Year game was published",
+       y = "Count of games",
+       title = "The number of board games that contain War as the category over time")
+
+
+
+board_games %>% 
+  group_by(year_published, category) %>% 
+  arrange(desc(year_published)) %>% 
+  filter(str_detect(category, "Dice")) %>% 
+  count(category) %>%
+  ggplot(aes(year_published, n)) +
+  geom_col() +
+  labs(x = "Year game was published",
+       y = "Count of games",
+       title = "The number of board games that contain dice as the category over time")
+
+
+
+board_games %>% 
+  group_by(year_published, category) %>% 
+  arrange(desc(year_published)) %>% 
+  filter(str_detect(category, "Action")) %>% 
+  count(category) %>%
+  ggplot(aes(year_published, n)) +
+  geom_col() +
+  labs(x = "Year game was published",
+       y = "Count of games",
+       title = "The number of board games that contain action as the category over time")
+
+
+board_games %>% 
+  group_by(year_published, category) %>% 
+  arrange(desc(year_published)) %>% 
+  filter(str_detect(category, "Fight")) %>% 
+  count(category) %>%
+  ggplot(aes(year_published, n)) +
+  geom_col() +
+  labs(x = "Year game was published",
+       y = "Count of games",
+       title = "The number of board games that contain fighting as the category over time")
+
+
+board_games %>% 
+  group_by(year_published, category) %>% 
+  arrange(desc(year_published)) %>% 
+  filter(str_detect(category, "Card")) %>% 
+  count(category) %>%
+  ggplot(aes(year_published, n)) +
+  geom_col() +
+  labs(x = "Year game was published",
+       y = "Count of games",
+       title = "The number of board games that contain card as the category over time")
+
+
+
+board_games %>% 
+  group_by(year_published, category) %>% 
+  arrange(desc(year_published)) %>% 
+  filter(str_detect(category, "Economic")) %>% 
+  count(category) %>%
+  ggplot(aes(year_published, n)) +
+  geom_col() +
+  labs(x = "Year game was published",
+       y = "Count of games",
+       title = "The number of board games that contain economic as the category over time")
+
+
+board_games %>% 
+  group_by(year_published) %>% 
+  count(year_published) %>% 
+  ggplot(aes(year_published, n)) +
+  geom_col() +
+  labs(x = "Year Published",
+       y = "",
+       title = "Overview of number of board games produced per year.")
+
+
+```
+
+##My wife and I love playing Clue (and games in general). I wanted to see the different editions of Clue and which one had the highest average rating. We love the TV show The Office and did not realize that they had this edition. 
+```{r}
+clue <- board_games %>% 
+  filter(year_published > 1985, str_detect(name, "Clue:")) %>% 
+  arrange(desc(average_rating)) %>% 
+  select(name, year_published, average_rating, users_rated)
+
+
+ggplotly(clue %>% 
+  ggplot(aes(reorder(name, average_rating), average_rating, fill = name)) +
+  geom_col() +
+  coord_flip() +
+  theme(legend.position="none") +
+  labs(x = "", 
+       y = "Average Rating",
+       title = "Clue editions based on their average rating"), tooltip = ("average_rating"))
+
+
+
+
+```
+##I wanted to see how the mechanics of the games have changed over time. I did this by taking the top four mechanics by decade and combined them into a dataframe. 
+```{r}
+
+board_games_1950 <- board_games %>% 
+  group_by(decade, mechanic) %>%
+  filter(decade == 1950) %>% 
+  tally(sort = T) %>% 
+  top_n(5)
+
+
+board_games_1960 <- board_games %>% 
+  group_by(decade, mechanic) %>%
+  filter(decade == 1960) %>% 
+  tally(sort = T) %>% 
+  top_n(5)
+
+board_games_1970 <- board_games %>% 
+  group_by(decade, mechanic) %>%
+  filter(decade == 1970) %>% 
+  tally(sort = T) %>% 
+  top_n(5)
+
+board_games_1980 <- board_games %>% 
+  group_by(decade, mechanic) %>%
+  filter(decade == 1980) %>% 
+  tally(sort = T) %>% 
+  top_n(5)
+
+board_games_1990 <- board_games %>% 
+  group_by(decade, mechanic) %>%
+  filter(decade == 1990) %>% 
+  tally(sort = T) %>% 
+  top_n(5)
+
+board_games_2000 <- board_games %>% 
+  group_by(decade, mechanic) %>%
+  filter(decade == 2000) %>% 
+  tally(sort = T) %>% 
+  top_n(5)
+
+board_games_2010 <- board_games %>% 
+  group_by(decade, mechanic) %>%
+  filter(decade == 2010) %>% 
+  tally(sort = T) %>% 
+  top_n(5)
+
+
+board_games_mechanic <- bind_rows(board_games_1950, board_games_1960, board_games_1970, board_games_1980, board_games_1990, board_games_2000, board_games_2010)
+
+
+board_games_mechanic <- board_games_mechanic %>% 
+  filter(!is.na(mechanic))
+```
+
+##Below are the graphs of the proportion of the top game mechanics by decade using ggplot2 and plotly. 
+```{r}
+
+board_games_mechanic %>% 
+  ggplot(aes(decade, n, fill = mechanic)) +
+  geom_col() +
+  labs(x = "Decade",
+       y = "",
+       fill = "Game Mechanics",
+       title = "Proportion of top game mechanics by decade")
+
+ggplotly(board_games_mechanic %>% 
+  ggplot(aes(decade, n, fill = mechanic)) +
+  geom_col() +
+  theme(legend.position="none") +
+  labs(x = "Decade",
+       y = "",
+       fill = "Game Mechanics",
+       title = "Proportion of top game mechanics by decade"))
+
+
+```
+
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+# This is an appendix that has thoughts that were not used. 
+
+clue %>% 
+  ggplot(aes(year_published, average_rating, fill = fct_reorder(name, year_published))) +
+  geom_col() +
+  labs(x = "Year published",
+       y = "Average rating",
+       title = "Different editions of the game Clue.")
+
+board_games %>%
+  group_by(decade, mechanic) %>%
+  filter(!is.na(mechanic)) %>%
+  count(mechanic)
+```
+

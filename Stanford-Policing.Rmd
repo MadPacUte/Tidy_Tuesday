@@ -1,0 +1,32 @@
+---
+title: "Stanford-Policing"
+author: "Randall Madsen"
+date: "March 18, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(tidyverse)
+
+theme_set(theme_classic())
+
+combined_data <- readr::read_csv("https://raw.githubusercontent.com/5harad/openpolicing/master/results/data_for_figures/combined_data.csv")
+
+combined_data %>% 
+  group_by(location) %>% 
+  summarize(total_stops = sum(stops_per_year)) %>% 
+  arrange(desc(total_stops))
+
+combined_data %>% 
+  group_by(state) %>% 
+  ggplot(aes(state, stops_per_year, fill = driver_race)) +
+  geom_col()
+
+```
+

@@ -1,0 +1,123 @@
+---
+title: "Media Franchises"
+author: "Randall Madsen"
+date: "July 7, 2019"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(scales)
+library(plotly)
+
+media_franchises <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-07-02/media_franchises.csv")
+
+theme_set(theme_classic())
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+graph_1 <- ggplotly(media_franchises %>%
+  filter(owners == "The Walt Disney Company") %>% 
+  group_by(franchise) %>% 
+  mutate(total_revenue = sum(revenue)) %>% 
+  distinct(franchise, .keep_all = T) %>% 
+  ungroup() %>% 
+  mutate(franchise = fct_reorder(franchise, total_revenue)) %>% 
+  ggplot(aes(franchise, total_revenue, fill = original_media,
+             text = paste('Franchise:', franchise,
+                          '</br>',
+                          '</br> Total Revenue Amount: $',total_revenue))) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  labs(x = "",
+       y = "Total Revenue (in Billions)",
+       fill = "",
+       title = "Media Franchises Owned by The Walt Disney Company"),
+  tooltip = "text")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+graph_2 <- ggplotly(media_franchises %>%
+  filter(owners == "The Walt Disney Company") %>% 
+  group_by(franchise) %>% 
+  mutate(total_revenue = sum(revenue)) %>% 
+  ungroup() %>% 
+  mutate(franchise = fct_reorder(franchise, -total_revenue)) %>% 
+  ggplot(aes(franchise, revenue, fill = revenue_category,
+             text = paste('Franchise:', franchise,
+                          '</br>',
+                          '</br> Revenue Amount: $',round(revenue),
+                          '</br> Revenue Category: ', revenue_category))) +
+  geom_col() +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  facet_wrap(~franchise, scales = "free") +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  labs(fill = "", 
+       x = "",
+       y = "",
+       title = "Media Franchises Owned by The Walt Disney Company Broken down by Revenue Category"),
+  tooltip = "text")
+```
+ 
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+distinct_top_revenue_source <- media_franchises %>% 
+  group_by(franchise) %>% 
+  mutate(top_revenue = max(revenue)) %>% 
+  ungroup() %>% 
+  filter(top_revenue == revenue)
+
+graph_3 <- ggplotly(distinct_top_revenue_source %>%  
+  ggplot(aes(as.factor(revenue_category),  revenue, fill = franchise,
+             text = paste('Franchise:', franchise,
+                          '</br>',
+                          '</br> Revenue Amount: $',round(revenue)))) +
+  geom_point(aes(col = franchise), size=3) +
+  theme(legend.position="none") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  # theme(axis.title.x=element_blank(),
+  #       axis.text.x=element_blank(),
+  #       axis.ticks.x=element_blank()) +
+  labs(x = "",
+       y = "Revenue (in Billions)",
+       title = "Top Revenue Source by Franchise") +
+  coord_flip(),
+  tooltip = "text")
+
+```
+
+    
+Row {.tabset}
+-------------------------------------
+    
+### The Walt Disney Company (Total Revenue)
+    
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+graph_1
+```
+
+    
+### The Walt Disney Company (Revenue by Source)
+    
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+graph_2
+```
+    
+### Top Revenue Source by Franchise 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+graph_3
+```
+

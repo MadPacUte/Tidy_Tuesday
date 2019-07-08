@@ -1,0 +1,136 @@
+---
+title: "Media Franchises"
+author: "Randall Madsen"
+date: "July 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(scales)
+library(plotly)
+
+media_franchises <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-07-02/media_franchises.csv")
+
+theme_set(theme_classic())
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+graph_1 <- ggplotly(media_franchises %>%
+  filter(str_detect(owners, "Disney")) %>% 
+  group_by(franchise) %>% 
+  mutate(total_revenue = sum(revenue)) %>% 
+  distinct(franchise, .keep_all = T) %>% 
+  ungroup() %>% 
+  mutate(franchise = fct_reorder(franchise, total_revenue)) %>% 
+  ggplot(aes(franchise, total_revenue, fill = original_media,
+             text = paste('Franchise:', franchise,
+                          '</br>',
+                          '</br> Total Revenue Amount: $',total_revenue))) +
+  geom_col() +
+  coord_flip() +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  labs(x = "",
+       y = "Total Revenue (in Billions)",
+       fill = "",
+       title = "Media Franchises Owned by The Walt Disney Company"),
+  tooltip = "text")
+
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+
+
+
+graph_2 <- ggplotly(media_franchises %>%
+  filter(str_detect(owners, "Disney")) %>% 
+  group_by(franchise) %>% 
+  mutate(total_revenue = sum(revenue)) %>% 
+  ungroup() %>% 
+  mutate(franchise = fct_reorder(franchise, total_revenue)) %>% 
+  ggplot(aes(franchise, revenue, fill = revenue_category,
+             text = paste('Franchise:', franchise,
+                          '</br>',
+                          '</br> Revenue Amount: $',round(revenue),
+                          '</br> Revenue Category: ', revenue_category))) +
+  geom_col(position = "stack") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  theme(legend.position = "none") +
+  coord_flip() +
+  # facet_wrap(~franchise, scales = "free") +
+  labs(fill = "", 
+       x = "",
+       y = "",
+       title = "Media Franchises Owned by The Walt Disney Company",
+       subtitle = "Broken down by Revenue Category"),
+  tooltip = "text") 
+ 
+
+# axis.title.x=element_blank(),
+#         axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank(),
+
+
+  # layout(title = "New plot title",
+  #    #xaxis = list(showticklabels = FALSE),
+  #    legend = list(orientation = "v"))
+```
+ 
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+distinct_top_revenue_source <- media_franchises %>% 
+  group_by(franchise) %>% 
+  mutate(top_revenue = max(revenue)) %>% 
+  ungroup() %>% 
+  filter(top_revenue == revenue)
+
+graph_3 <- ggplotly(distinct_top_revenue_source %>%  
+  ggplot(aes(as.factor(revenue_category),  revenue, fill = franchise,
+             text = paste('Franchise:', franchise,
+                          '</br>',
+                          '</br> Revenue Amount: $',round(revenue)))) +
+  geom_point(aes(col = franchise), size=3) +
+  theme(legend.position="none") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  labs(x = "",
+       y = "Revenue (in Billions)",
+       title = "Top Revenue Source by Franchise") +
+  coord_flip(),
+  tooltip = "text")
+
+```
+
+##This was another attempt at a [tidytuesday](https://github.com/rfordatascience/tidytuesday) blog post. This [dataset](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-07-02) focused on media franchises. The first one that I was curious about was how The Walt Disney Company stacked up by total revenue. 
+    
+### The Walt Disney Company (Total Revenue)
+    
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+graph_1
+```
+
+## I then wanted to see how their revenue was divided between the different sources. 
+    
+### The Walt Disney Company (Revenue by Source)
+    
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+graph_2
+```
+
+## After exploring Disney franchises, I was curious about the overall top revenue source by franchise.
+
+### Top Revenue Source by Franchise 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+graph_3
+```
+
+## It is interesting to see that there are `r nrow(distinct_top_revenue_source %>% filter(revenue_category == "Merchandise, Licensing & Retail"))` total in the Merchandise, Licensing & Retail category. This equates to `r round((nrow(distinct_top_revenue_source %>% filter(revenue_category == "Merchandise, Licensing & Retail")))/ (nrow(distinct_top_revenue_source)) * 100, 1)` % of the top total highest revenue source. 
+
+## In summary, generating revenue through merchandise, licensing and retail will generally provide the most for franchises.  

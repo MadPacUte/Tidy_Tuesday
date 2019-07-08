@@ -1,0 +1,63 @@
+---
+title: "Women in the Workforce"
+author: "Randall Madsen"
+date: "March 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(rbokeh)
+
+jobs_gender <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv")
+
+earnings_female <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/earnings_female.csv") 
+
+employed_gender <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/employed_gender.csv") 
+
+theme_set(theme_classic())
+```
+
+```{r}
+jobs_gender %>% 
+  names()
+
+jobs_gender %>% 
+  group_by(major_category) %>% 
+  View()
+```
+
+
+
+```{r}
+ggplotly(earnings_female %>% 
+  mutate(ave = mean(percent)) %>% 
+  filter(group == "25-34 years") %>% 
+  ggplot(aes(Year, percent, fill = group)) +
+  geom_col())
+
+
+figure(data = earnings_female) %>% 
+  ly_lines(x = Year, y = percent , color = group, legend = F) %>% 
+  # Add a points layer
+  ly_points(x = Year, y = percent , color = group, legend = F)
+
+
+figure(data = earnings_female) %>% 
+  ly_lines(x = Year, y = percent , color = group, legend = F) %>% 
+  # Add a points layer
+  ly_hexbin(x = Year, y = percent) 
+
+
+earnings_female %>% 
+  names()
+
+
+```
+
